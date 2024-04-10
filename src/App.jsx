@@ -3,26 +3,25 @@ import Navbar from "./components/nav/Navbar";
 import MovieList from "./components/content/MovieList";
 import WatchList from "./components/content/WatchList";
 import SearchBar from "./components/nav/SearchBar";
-import Button from "./components/atoms/button/Button";
 import Loader from "./components/atoms/utils/Loader";
 import Banner from "./components/atoms/utils/Banner";
 import { useEffect, useState } from "react";
+import { useMovies } from "./hooks/useMovies";
+import { useLocalStorageState } from "./hooks/useLocalStorageState";
+import { useKey } from "./hooks/useKey";
 
 
 function App() {
 
-  const [movies, setMovies] = useState([]);
-  const [watchList, setWatchList] = useState([]);
-  const [query, setQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [finalQuery, setFinalQuery] = useState('');
   const [selectedMovieId, setSelectedMovieId] = useState('');
   const [isSelected, setIsSelected] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
+  const [watchList, setWatchList] = useLocalStorageState([], 'watchList')
+  const {movies, isLoading, error} = useMovies(finalQuery);
+  useKey('Escape', () => alert("You fag!"))
 
   const onHandleSelect = (movieId) => {
-    console.log("SELECTED MOVIE ID: ", movieId);
     setSelectedMovieId(selectedMovieId => movieId);
     setIsSelected(isSelected => true);
   };
@@ -35,9 +34,9 @@ function App() {
   };
 
   const onHandleAddToWatchList = (movie) => {
-    // Check if movie is already in watchlist
     if (watchList.some(watchListMovie => watchListMovie.imdbID === movie.imdbID)) return;
-
+    
+    // localStorage.setItem('watchList', JSON.stringify([...watchList, movie]));
     setWatchList(watchList => [...watchList, movie]);
     onShowBanner();
   }
@@ -46,47 +45,20 @@ function App() {
     setWatchList(watchList => watchList.filter(movie => movie.imdbID !== movieId));
   }
 
-  const onHandleSearch = (e) => {
+  const onHandleSearch = (e, searchTerm) => {
     e.preventDefault();
-    setFinalQuery(finalQuery => query);
+    setFinalQuery(finalQuery => searchTerm);
   }
 
   const handleCloseMovieCard = () => {
     setIsSelected(isSelected => false);
   }
 
-  useEffect(() => {
-    const fetchMovies = async () => {
-      if (!query) return;
-      try {
-        setIsLoading(true);
-        setError(error => '');
-
-        const res = await fetch(`https://www.omdbapi.com/?apikey=f2ce3029&s=${query}`);
-        if (!res.ok) {
-          throw new Error(`Something went wrong (CODE: ${res.status})`);
-        }
-        const data = await res.json();
-        if (data.Response === 'False') {
-          throw new Error(`No movies found with the name "${query}"`);
-        }
-        setMovies(data.Search);
-      } catch (err) {
-        setError(error => err + ' ');
-      } finally {
-        setIsLoading(false);
-        setFinalQuery(finalQuery => '');
-        setQuery(query => '');
-      }
-    }
-    fetchMovies();
-  }, [finalQuery]);
-
   return (
     <div className="a">
       <Navbar>
         <h1>Movie List</h1>
-        <SearchBar onHandleSearch={onHandleSearch} query={query} setQuery={setQuery} />
+        <SearchBar onHandleSearch={onHandleSearch} />
       </Navbar>
       <Container>
         <MovieList movies={movies} setSelectedMovieId={setSelectedMovieId} handleSelectedMovie={onHandleSelect}>

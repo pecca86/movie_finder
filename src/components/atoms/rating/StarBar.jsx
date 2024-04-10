@@ -1,9 +1,17 @@
 import Star from "./Star";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const StarBar = () => {
     const [score, setScore] = useState(0);
     const [tempScore, setTempScore] = useState(0);
+
+    const starRef = useRef(0);
+
+    useEffect(() => {
+        starRef.current = score;
+        console.log('starRef.current:', starRef.current);
+        console.log('score:', score);
+    }, [score]);
 
     return (
         <div className="star-bar">

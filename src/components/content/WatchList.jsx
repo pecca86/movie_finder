@@ -45,6 +45,16 @@ const WatchList = ({ isSelected, handleCloseMovieCard, movieId, watchList, onHan
         fetchMovie();
     }, [movieId]);
 
+    useEffect(() => {
+        if (!currentMovie.Title) return;
+        document.title = currentMovie.Title;
+
+        return () => {
+            console.log('cleanup');
+            document.title = 'Movie List';
+        };
+    }, [currentMovie])
+
     if (isSelected) {
         let isMovieAlreadyAdded = watchList.some(movie => movie.imdbID === currentMovie.imdbID);
 
